@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ocean Adventure Game</title>
+<style>
+    body {
+        background: #003459; /* deep ocean blue */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: "Trebuchet MS", sans-serif;
+        color: #E0F7FA;
+    }
+
+    #gameArea {
+        border: 5px solid #0277BD; 
+        background: url('https://i.imgur.com/0Z8FZ7n.png'); /* subtle underwater texture */
+        background-size: cover;
+    }
+
+    h1 {
+        position: absolute;
+        top: 20px;
+        font-size: 34px;
+        text-shadow: 0 0 10px #00B8D4;
+        letter-spacing: 2px;
+    }
+
+    #score {
+        position: absolute;
+        top: 70px;
+        font-size: 22px;
+        text-shadow: 0 0 6px #00E5FF;
+    }
+</style>
+</head>
+<body>
+
+<h1>🌊 Ocean Adventure</h1>
+<div id="score">Score: 0</div>
+<canvas id="gameArea" width="400" height="400"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameArea");
+    const ctx = canvas.getContext("2d");
+
+    const box = 20;
+    let snake = [{ x: 9 * box, y: 9 * box }];
+    let direction = "";
+    let score = 0;
+    let gameRunning = true;
+
+    // Food image = Seashell
+    const seashell = new Image();
+    seashell.src = "https://i.imgur.com/5n2YTQ6.png";
+
+    // Snake head = fish head
+    const fishHead = new Image();
+    fishHead.src = "https://i.imgur.com/0YfXgHl.png";
+
+    // Fish body segment (blue fish shape)
+    const fishBody = new Image();
+    fishBody.src = "https://i.imgur.com/3ZDx8WF.png";
+
+    // Random seashell placement
+    let food = {
+        x: Math.floor(Math.random() * 20) * box,
+        y: Math.floor(Math.random() * 20) * box
+    };
+
+    document.addEventListener("keydown", changeDirection);
+
+    function changeDirection(event) {
+        if (event.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+        else if (event.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+        else if (event.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+        else if (event.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+    }
+
+    function drawGame() {
+        if (!gameRunning) return;
+
+        // Draw seashell (food)
+        ctx.drawImage(seashell, food.x, food.y, box, box);
+
+        // Draw fish-snake
+        for (let i = 0; i < snake.length; i++) {
+            if (i === 0) {
+                ctx.drawImage(fishHead, snake[i].x, snake[i].y, box, box);
+            } else {
+                ctx.drawImage(fishBody, snake[i].x, snake[i].y, box, box);
+            }
+        }
+
+        let headX = snake[0].x;
+        let headY = snake[0].y;
+
+        if (direction === "UP") headY -= box;
+        if (direction === "DOWN") headY += box;
+        if (direction === "LEFT") headX -= box;
+        if (direction === "RIGHT") headX += box;
+
+        // Check wall or body collision
+        if (
+            headX < 0 || headX >= 400 ||
+            headY < 0 || headY >= 400 ||
+            snakeCollision(headX, headY)
+        ) {
+            gameOver();
+            return;
+        }
+
+        snake.unshift({ x: headX, y: headY });
+
+        // Eating seashell
+        if (headX === food.x && headY === food.y) {
+            score += 10;
+            document.getElementById("score").innerText = "Score: " + score;
+
+            food = {
+                x: Math.floor(Math.random() * 20) * box,
+                y: Math.floor(Math.random() * 20) * box
+            };
+        } else {
+            snake.pop();
+        }
+    }
+
+    function snakeCollision(x, y) {
+        return snake.slice(1).some(part => part.x === x && part.y === y);
+    }
+
+    function gameOver() {
+        gameRunning = false;
+        ctx.fillStyle = "#E0F7FA";
+        ctx.font = "28px Trebuchet MS";
+        ctx.fillText("GAME OVER — YOU SANK!", 45, 200);
+    }
+
+    setInterval(drawGame, 150);
+</script>
+
+</body>
+</html>
